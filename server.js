@@ -18,12 +18,14 @@ let browser = puppeteer
     // Assuming the browser crashed
     if (retries > 10)
       throw 'Chrome crashed more then 10 times'
+    
     retries++
     if (browser)
       browser.then(b => {
         if (b) {
           b.close()
         }
+        
         browser = puppeteer.launch(browserOptions)
       })
     else 
@@ -51,9 +53,9 @@ app.get('/screenshot', (req, res) => {
       */
       const headers = req.rawHeaders.reduce((prev, cur, i, array) => {
         if (i % 2 == 0)
-          return prev.concat([{
+          return {...prev,
             [cur]: array[i + 1]
-          }])
+          }
         else
           return prev
       }, [])
@@ -75,7 +77,7 @@ app.get('/screenshot', (req, res) => {
         await page.close()
     }
   })
-  .catch(e =>
+  .catch(e => {
     res.status(500)
       .send(`Puppeteer Failed 
         - url: ${url} 
@@ -84,7 +86,7 @@ app.get('/screenshot', (req, res) => {
         - x: ${x} 
         - y: ${y} 
         - stacktrace: \n\n${e.stack}`)
-  )
+  })
   .then(img => {
     res.set('Content-type', 'image/png').send(img)
   })
