@@ -1,6 +1,7 @@
 const express = require('express')
-const app = express()
 const puppeteer = require('puppeteer')
+const cookieParser = require('cookie-parser')
+const app = express()
 const port = 80
 
 const browser = puppeteer.launch({
@@ -9,6 +10,8 @@ const browser = puppeteer.launch({
       '--disable-setuid-sandbox'
   ]
 }).catch(console.log)
+
+app.use(cookieParser())
 
 app.get('/screenshot', (req, res) => {
   let { url, width, height, x, y } = req.query
