@@ -11,10 +11,15 @@ const browser = puppeteer.launch({
 }).catch(console.log)
 
 app.get('/screenshot', (req, res) => {
-  const { url, width, height, x, y } = req.query
+  let { url, width, height, x, y } = req.query
   if (!url)
     res.status(422)
       .send('need a url')
+
+  width = parseInt(width, 10)
+  height = parseInt(height, 10)
+  x = parseInt(x, 10)
+  y = parseInt(y, 10)
 
   browser.then(async (browser) => {
     let page
@@ -23,8 +28,8 @@ app.get('/screenshot', (req, res) => {
       await page.goto(url, { waitUntil: 'networkidle2' })
       let options = { fullpage: true }
       if (x && y && width && height)
-        options = { 
-          clip: { x, y, width, height } 
+        options = {
+          clip: { x, y, width, height }
         }
       return await page.screenshot(options)    
     } finally {
