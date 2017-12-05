@@ -10,7 +10,7 @@ const browserOptions = Object.freeze({
   ]
 })
 
-const browserPromise = puppeteer.launch(options).catch(console.log)
+const browserPromise = puppeteer.launch(browserOptions).catch(console.log)
 
 const screenshot = async (headers, browserPromise, url, width=800, height=600, x=0, y=0) => {
   const browser = await browserPromise
