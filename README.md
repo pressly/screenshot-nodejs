@@ -10,7 +10,7 @@ sudo docker run -p 8787:3000 screenshot
 
 # REST API
 ```
-GET localhost:8787/screenshot?url={url}&x={x}&y={y}&width={width}&height={height}
+GET localhost:8787/png?url={url}&x={x}&y={y}&width={width}&height={height}
 ```
 Can be run with just width & height or x & y or none. 
 Default x = 0

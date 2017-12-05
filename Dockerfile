@@ -30,7 +30,7 @@ RUN groupadd -r pptruser && useradd -r -g pptruser -G audio,video pptruser \
 # Run user as non privileged.
 USER pptruser
 
-
+EXPOSE 9229
 EXPOSE 3000
 
-CMD ["node", "server.js"]
+CMD ["node", "--inspect=0.0.0.0", "server.js", "10"]

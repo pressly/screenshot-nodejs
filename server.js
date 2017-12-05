@@ -10,15 +10,35 @@ const browserOptions = Object.freeze({
   ]
 })
 
-const browserPromise = puppeteer.launch(browserOptions).catch(console.log)
+const NUM_BROWSERS = parseInt(process.argv[2], 10)
 
-const screenshot = async (headers, browserPromise, url, width=800, height=600, x=0, y=0) => {
-  const browser = await browserPromise
+const browser = {
+  init(options) {
+    if (!this._browsers)
+      this._browsers = []
+    this._inUse = -1
+    for (let i = 0; i < NUM_BROWSERS; i++)
+      this._browsers.push(puppeteer.launch(browserOptions).catch(console.log))
+  },
+  newPage() {
+    this._inUse++
+    if (this._inUse === NUM_BROWSERS)
+      this._inUse = 0
+    if (!this._browsers)
+      return
+    
+    return this._browsers[this._inUse]
+      .then(b => b.newPage())
+  }
+}
 
+browser.init(browserOptions)
+
+const screenshot = async (headers, url, width=800, height=600, x=0, y=0, vpWidth=1000, vpHeight=1000) => {
   let page
   try { 
     page = await browser.newPage()
-    await page.setViewport({ width, height })
+    await page.setViewport({ width: vpWidth, height: vpHeight })
 
     await page.setExtraHTTPHeaders(headers)
 
@@ -38,7 +58,7 @@ const screenshot = async (headers, browserPromise, url, width=800, height=600, x
   }
 }
 
-app.get('/screenshot', (req, res) => {
+app.get('/png', (req, res) => {
   let { url, width, height, x, y } = req.query
   if (!url)
     res.status(422)
@@ -65,12 +85,13 @@ app.get('/screenshot', (req, res) => {
   let picture
 
   if (width && height && x && y)
-    picture = screenshot(headers, browserPromise, url, width, height, x, y)
+    picture = screenshot(headers, url, width, height, x, y)
   else if (width && height)
-    picture = screenshot(headers, browserPromise, url, width, height)
+    picture = screenshot(headers, url, width, height)
   else if (x && y)
-    picture = screenshot(headers, browserPromise, url, 800, 600, x, y)
-  
+    picture = screenshot(headers, url, 800, 600, x, y)
+  else
+    picture = screenshot(headers, url)
   picture
     .catch(e => {
       res.status(500)
@@ -85,6 +106,7 @@ app.get('/screenshot', (req, res) => {
     .then(img => {
       res.set('Content-type', 'image/png').send(img)
     })
+  
 })
 
 app.listen(port, () => console.log(`server listening on port ${port}`))
