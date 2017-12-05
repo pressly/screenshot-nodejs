@@ -5,16 +5,18 @@ Node.js server with REST API built on top of [GoogleChrome/puppeteer](https://gi
 ```
 cd screenshot/
 sudo docker build -t screenshot .
-sudo docker run -p 8787:80 screenshot
+sudo docker run -p 8787:3000 screenshot
 ```
 
 # REST API
 ```
-GET /screenshot?url={url}&x={x}&y={y}&width={width}&height={height}
+GET localhost:8787/screenshot?url={url}&x={x}&y={y}&width={width}&height={height}
 ```
-Note - x, y, width, height must all be defined or none of them defined.
-If none of them are defined it will just send back a full page sized image
-
+Can be run with just width & height or x & y or none. 
+Default x = 0
+Default y = 0
+Default width = 800
+Default height = 600
 # LICENSE
 
 Screenshot is licensed under the [MIT license](./LICENSE).
