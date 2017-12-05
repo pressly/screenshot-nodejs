@@ -1,7 +1,7 @@
 const express = require('express')
 const puppeteer = require('puppeteer')
 const app = express()
-const port = 80
+const port = 3000
 
 const browserOptions = Object.freeze({
   args: [
@@ -46,13 +46,14 @@ app.get('/screenshot', (req, res) => {
     let page
     try { 
       page = await browser.newPage()
+      await page.setViewport({ width, height })
       /**
        * pass through cookies, auth, etc. 
        * Using rawHeaders to ensure the values are strings
        * `req.headers` could have array values 
       */
       const headers = req.rawHeaders.reduce((prev, cur, i, array) => {
-        if (i % 2 == 0)
+        if (i % 2 === 0)
           return {...prev,
             [cur]: array[i + 1]
           }
