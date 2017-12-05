@@ -5,7 +5,7 @@ Node.js server with REST API built on top of [GoogleChrome/puppeteer](https://gi
 ```
 cd screenshot/
 sudo docker build -t screenshot .
-sudo docker run -p 8787:80 screenshot .
+sudo docker run -p 8787:80 screenshot
 ```
 
 # REST API
