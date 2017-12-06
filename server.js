@@ -2,6 +2,7 @@ const express = require('express')
 const puppeteer = require('puppeteer')
 const app = express()
 const port = 3000
+const sleep = require('sleep-promise')
 
 const browserOptions = Object.freeze({
   args: [
@@ -10,31 +11,68 @@ const browserOptions = Object.freeze({
   ]
 })
 
-const NUM_BROWSERS = parseInt(process.argv[2], 10)
+const NUM_BROWSERS     = parseInt(process.argv[2], 10)
+const DEFAULT_VIEWPORT = [800, 600]
+const DEFAULT_CROP     = [800, 600]
+const DEFAULT_X        = 0
+const DEFAULT_Y        = 0
 
 const browser = {
   init(options) {
     if (!this._browsers)
       this._browsers = []
-    this._inUse = -1
     for (let i = 0; i < NUM_BROWSERS; i++)
       this._browsers.push(puppeteer.launch(browserOptions).catch(console.log))
   },
-  newPage() {
-    this._inUse++
-    if (this._inUse === NUM_BROWSERS)
-      this._inUse = 0
+  async cleanUp() {
+    const browsers = await Promise.all(this._browsers)
+    for (let browser of browsers) {
+      const pages = await browser.pages()
+      const length = pages.length 
+      if (length > 2)
+      pages.forEach((page, i) => {
+        if (i < length - 1) // don't close the last page (could be in use)
+          page.close()
+      })
+    }
+    await sleep(1000)
+    this.cleanUp() // tail call optimized 
+  },
+  async newPage(prevIndex = null) {
     if (!this._browsers)
-      return
-    
-    return this._browsers[this._inUse]
-      .then(b => b.newPage())
+      throw new Error(`No browsers`)
+
+    let i
+    if (prevIndex) {
+      i = prevIndex
+    } else {
+      const numWaiting = await Promise.all(this._recalculateNumWaiting())
+      i = numWaiting.indexOf(Math.min(...numWaiting))
+    }
+
+    const browser = await this._browsers[i]
+    const pages = await browser.pages()
+
+    if (pages.length <= 1) {
+      return browser.newPage()
+    } else if (pages.length === 2) { // browser already rendering a page
+      await sleep(100)
+      return this.newPage(i) // keep checking the same browser
+    }
+  },
+  _recalculateNumWaiting() {
+    return this._browsers.map(async (b) => {
+      const browser = await b
+      const pages = await browser.pages()
+      return pages.length
+    })
   }
 }
 
 browser.init(browserOptions)
+browser.cleanUp()
 
-const screenshot = async (headers, url, width=800, height=600, x=0, y=0, vpWidth=1000, vpHeight=1000) => {
+const screenshot = async (headers, url, width, height, vpWidth, vpHeight, x, y) => {
   let page
   try { 
     page = await browser.newPage()
@@ -42,7 +80,7 @@ const screenshot = async (headers, url, width=800, height=600, x=0, y=0, vpWidth
 
     await page.setExtraHTTPHeaders(headers)
 
-    await page.goto(url, { waitUntil: 'networkidle2' })
+    await page.goto(url, { waitUntil: 'load' })
 
     let options = { fullpage: true }
 
@@ -58,15 +96,30 @@ const screenshot = async (headers, url, width=800, height=600, x=0, y=0, vpWidth
   }
 }
 
+const getProperitiesFrom = ({ window, crop, x, y }) => {
+  let [vpWidth, vpHeight] = window ? window.split('x').map(n => parseInt(n, 10)) : []
+  
+  if (!vpWidth || !isFinite(vpWidth) || !vpHeight || !isFinite(vpHeight))
+    [vpWidth, vpHeight] = DEFAULT_VIEWPORT
+
+  let [width, height] = crop ? crop.split('x').map(n => parseInt(n, 10)) : []
+  
+  if (!width || !isFinite(width) || !height || !isFinite(height))
+    [width, height] = DEFAULT_CROP
+
+  x = x ? parseInt(x, 10) : DEFAULT_X
+  y = y ? parseInt(y, 10) : DEFAULT_Y
+  return { x, y, vpWidth, vpHeight, width, height }
+} 
+
+
 app.get('/png', (req, res) => {
-  let { url, width, height, x, y } = req.query
+  let { url } = req.query
   if (!url)
     res.status(422)
       .send('need a url')
-  width = parseInt(width, 10)
-  height = parseInt(height, 10)
-  x = parseInt(x, 10)
-  y = parseInt(y, 10)
+  
+  const { x, y, vpWidth, vpHeight, width, height } = getProperitiesFrom(req.query)
 
   /**
    * pass through cookies, auth, etc. 
@@ -82,17 +135,7 @@ app.get('/png', (req, res) => {
       return prev
   }, [])
 
-  let picture
-
-  if (width && height && x && y)
-    picture = screenshot(headers, url, width, height, x, y)
-  else if (width && height)
-    picture = screenshot(headers, url, width, height)
-  else if (x && y)
-    picture = screenshot(headers, url, 800, 600, x, y)
-  else
-    picture = screenshot(headers, url)
-  picture
+  screenshot(headers, url, width, height, vpWidth, vpHeight, x, y)
     .catch(e => {
       res.status(500)
         .send(`Puppeteer Failed 
