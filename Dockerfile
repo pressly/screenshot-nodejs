@@ -20,6 +20,7 @@ RUN apt-get update && apt-get install -y wget --no-install-recommends \
     && rm -rf /src/*.deb
 
 RUN npm install
+RUN npm run-script build
 
 # Add pptr user.
 RUN groupadd -r pptruser && useradd -r -g pptruser -G audio,video pptruser \
@@ -33,4 +34,4 @@ USER pptruser
 EXPOSE 9229
 EXPOSE 3000
 
-CMD ["node", "--inspect=0.0.0.0", "server.js", "10"]
+CMD ["node", "--inspect=0.0.0.0", "dist/server.js", "10"]
