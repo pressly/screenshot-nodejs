@@ -1,12 +1,10 @@
-import { Browser, Page, ScreenshotOptions, Viewport, PDFOptions, LoadEvent } from 'puppeteer'
+import { Browser, Page, ScreenshotOptions, Viewport, PDFOptions, LoadEvent, PDFFormat } from 'puppeteer'
 import * as puppeteer from 'puppeteer'
 import * as sleep from 'sleep-promise'
 
 interface BrowserOptions {
   args: string[]
 }
-
-type FormatOptions = 'Letter' | 'Legal' | 'Tabload' | 'Ledger' | 'A0' | 'A1' | 'A2' | 'A3' | 'A4' | 'A5'
 
 export default class BrowserProxy {
   readonly _browsers: Promise<Browser | void>[]
@@ -103,7 +101,7 @@ export default class BrowserProxy {
     url: string, 
     width: number, height: number, vpWidth: number, vpHeight: number, 
     waitUntil: LoadEvent,
-    format: FormatOptions | undefined, retry = 0): Promise<Buffer | void> {
+    format: PDFFormat | undefined, retry = 0): Promise<Buffer | void> {
     let page: Page | null = null
     try {
       page = await this.newPage()
@@ -136,7 +134,6 @@ export default class BrowserProxy {
         (page as Page).close()
     }
   }
-  
 
   async _getFreestBrowser(): Promise<{ browser: Browser, pages: Page[] }> {
     const browsers = await Promise.all<Browser | void>(this._browsers)

@@ -2,7 +2,7 @@ import * as express from 'express'
 import { Request, Response } from 'express';
 import * as RateLimit from 'express-rate-limit'
 import * as puppeteer from 'puppeteer'
-import { Page, PageFnOptions, LoadEvent } from 'puppeteer';
+import { Page, PageFnOptions, LoadEvent, PDFFormat } from 'puppeteer';
 import Browser from './browser'
 
 const NUM_BROWSERS = parseInt(process.argv[2], 10)
@@ -21,10 +21,6 @@ const browserOptions = {
     '--disable-setuid-sandbox'
   ]
 }
-
-const waitUntilOptions: string[] = [
-  'networkidle2', 'networkidle0', 'domcontentloaded', 'load'
-]
 
 const browser = new Browser(browserOptions, NUM_BROWSERS)
 
@@ -78,12 +74,12 @@ app.get('/pdf', async (req: Request, res: Response): Promise<void> => {
     res.status(422)
       .send('need a url')
 
-  const { x, y, vpWidth, vpHeight, width, height, waitUntil } = getProperitiesFrom(req.query)
+  const { vpWidth, vpHeight, width, height, waitUntil, format } = getProperitiesFrom(req.query)
 
   const headers = transformHeaders(req.rawHeaders)
 
   try {
-    const pdfBuffer = await browser.pdf(headers, url, width, height, vpWidth, vpHeight, waitUntil as LoadEvent, undefined)
+    const pdfBuffer = await browser.pdf(headers, url, width, height, vpWidth, vpHeight, waitUntil as LoadEvent, format as PDFFormat)
     if (!pdfBuffer)
       throw new Error('pdf not taken')
     res.set('Content-type', 'application/pdf').send(pdfBuffer)
@@ -95,16 +91,23 @@ app.get('/pdf', async (req: Request, res: Response): Promise<void> => {
           - height: ${height} 
           - vpWidth: ${vpWidth}
           - vpHeight: ${vpHeight}
-          - x: ${x} 
-          - y: ${y} 
+          - format: ${format} 
           - stacktrace: \n\n${e.stack}`)
   }
 })
 
 app.listen(port, () => console.log(`server listening on port ${port}`))
 
-const getProperitiesFrom = ({ window, crop, x, y, waitUntil } : Record<string, string>) => {
-  waitUntil = waitUntilOptions.includes(waitUntil) ? waitUntil : 'networkidle2'
+const waitUntilOptions: string[] = [
+  'networkidle2', 'networkidle0', 'domcontentloaded', 'load'
+]
+
+const pdfFormatOptions: string[] = [
+  'Letter', 'Legal', 'Tabload', 'Ledger', 'A0', 'A1', 'A2', 'A3', 'A4', 'A5'
+]
+
+const getProperitiesFrom = ({ window, crop, x, y, waitUntil, format } : Record<string, string | undefined>) => {
+  waitUntil = waitUntil && waitUntilOptions.includes(waitUntil) ? waitUntil : 'networkidle2'
   
   let [vpWidth, vpHeight] = window ? window.split('x').map(n => parseInt(n, 10)) : DEFAULT_VIEWPORT
   
@@ -118,16 +121,19 @@ const getProperitiesFrom = ({ window, crop, x, y, waitUntil } : Record<string, s
 
   const numX = x ? parseInt(x as string, 10) : DEFAULT_X
   const numY = y ? parseInt(y as string, 10) : DEFAULT_Y
-  return { x: numX, y: numY, vpWidth, vpHeight, width, height, waitUntil }
-} 
 
+  format = format && pdfFormatOptions.includes(format) ? format : undefined
+
+  return { x: numX, y: numY, vpWidth, vpHeight, width, height, waitUntil, format }
+}
 
 /**
  * pass through cookies, auth, etc. 
  * Using rawHeaders to ensure the values are strings
  * `req.headers` could have array values 
-*/
-  
+ * Ex:
+ * [ 'headerKey', 'headerValue', ... ] => { 'headerKey': 'headerValue', ... } 
+ */
 const transformHeaders = (rawHeaders: string[]): Record<string, string> => 
   rawHeaders.reduce((prev, cur, i, array) =>
     i % 2 === 0 
