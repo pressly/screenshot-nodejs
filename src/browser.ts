@@ -1,4 +1,4 @@
-import { Browser, Page } from 'puppeteer'
+import { Browser, Page, ScreenshotOptions, Viewport, PDFOptions, LoadEvent } from 'puppeteer'
 import * as puppeteer from 'puppeteer'
 import * as sleep from 'sleep-promise'
 
@@ -6,10 +6,13 @@ interface BrowserOptions {
   args: string[]
 }
 
+type FormatOptions = 'Letter' | 'Legal' | 'Tabload' | 'Ledger' | 'A0' | 'A1' | 'A2' | 'A3' | 'A4' | 'A5'
+
 export default class BrowserProxy {
-  _browsers: Promise<Browser | void>[]
+  readonly _browsers: Promise<Browser | void>[]
   readonly numBrowsers: number
   readonly options: BrowserOptions
+
   constructor(options: BrowserOptions, numBrowsers: number) {
     this._browsers = []
     this.options = options
@@ -40,7 +43,7 @@ export default class BrowserProxy {
     }
   }
 
-  async newPage() {
+  async newPage(): Promise<Page> {
     const { browser, pages } = await this._getFreestBrowser()
     
     if (pages.length <= 1) {
@@ -51,7 +54,91 @@ export default class BrowserProxy {
     } 
   }
 
-  async _getFreestBrowser() {
+  async goto(page: Page, url: string, viewport: Viewport, headers: Record<string, string>, waitUntil: string) {
+    if (!page)
+      throw new Error('Couldn\'t create new page')
+    
+    await page.setViewport(viewport)
+    await page.setExtraHTTPHeaders(headers)
+    await page.goto(url, { waitUntil: waitUntil as LoadEvent })
+  }
+
+  async screenshot(headers: Record<string, string>, 
+    url: string, 
+    width: number, height: number, vpWidth: number, vpHeight: number, 
+    x: number, y: number, waitUntil: string, retry = 0): Promise<Buffer | void> {
+      let page: Page | undefined = undefined  
+      try {
+        page = await this.newPage()
+
+        const viewport = {
+          width: vpWidth, height: vpHeight
+        }
+
+        await this.goto(page, url, viewport, headers, waitUntil)
+
+        let options: ScreenshotOptions = { fullPage: true }
+    
+        if (x && y && width && height)
+          options = {
+            clip: { x, y, width, height }
+          }
+        
+        return await page.screenshot(options)   
+      } catch (e) {
+        if (page)
+          await (page as Page).close()
+        
+        if (retry < 3)
+          return this.screenshot(headers, url, width, height, vpWidth, vpHeight, x, y, waitUntil, retry + 1)
+        else
+          throw new Error(`3 Retries failed - stacktrace: \n\n${e.stack}`)
+      } finally {
+        if (page)
+          await (page as Page).close()
+      }
+  }
+
+  async pdf(headers: Record<string, string>, 
+    url: string, 
+    width: number, height: number, vpWidth: number, vpHeight: number, 
+    waitUntil: LoadEvent,
+    format: FormatOptions | undefined, retry = 0): Promise<Buffer | void> {
+    let page: Page | null = null
+    try {
+      page = await this.newPage()
+
+      const viewport = {
+        width: vpWidth, height: vpHeight
+      }
+
+      await this.goto(page, url, viewport, headers, waitUntil)
+
+      let options: PDFOptions = {
+        width: String(width),
+        height: String(height)
+      }
+  
+      if (format)
+        options = { format }
+  
+      return await page.pdf(options)
+    } catch (e) {
+      if (page)
+        await (page as Page).close()
+      
+      if (retry < 3)
+        return this.pdf(headers, url, width, height, vpWidth, vpHeight, waitUntil, format, retry + 1)
+      else
+        throw new Error(`3 Retries failed - stacktrace: \n\n${e.stack}`)
+    } finally {
+      if (page)
+        (page as Page).close()
+    }
+  }
+  
+
+  async _getFreestBrowser(): Promise<{ browser: Browser, pages: Page[] }> {
     const browsers = await Promise.all<Browser | void>(this._browsers)
     
     const freestBrowser: {
@@ -68,8 +155,8 @@ export default class BrowserProxy {
         return { pages, browser }
       else
         return prev
-    }, Promise.resolve({}) as Promise<{ browser: Browser, pages: Page[] }>)
 
+    }, Promise.resolve({}) as Promise<{ browser: Browser, pages: Page[] }>)
     return freestBrowser
   }
 }
