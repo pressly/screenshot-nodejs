@@ -56,6 +56,11 @@ Query Params
 GET localhost:{port}/pdf?url=https://www.google.com&format=Letter
 ```
 result: https://www.docdroid.net/223cLO0/pdf.pdf
+
+# NOTES
+
+There is a rate limiter set to limit the number of requests in a 3 second window to number of browsers open (set in Dockerfile) so if 10 browsers are open and 11 requests get made within 3 seconds the 11th will fail, it will be up to the client to retry.
+
 # LICENSE
 
 Screenshot is licensed under the [MIT license](./LICENSE).
