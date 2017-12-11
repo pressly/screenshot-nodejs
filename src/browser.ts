@@ -94,11 +94,8 @@ export default class BrowserProxy {
       }
   }
 
-  async pdf(headers: Record<string, string>, 
-    url: string, 
-    width: number, height: number, vpWidth: number, vpHeight: number, 
-    waitUntil: LoadEvent,
-    format: PDFFormat | undefined, retry = 0): Promise<Buffer> {
+  async pdf(headers: Record<string, string>, url: string, vpWidth: number, vpHeight: number, 
+    waitUntil: LoadEvent, format: PDFFormat | undefined, retry = 0): Promise<Buffer> {
     let page: Page | null = null
     try {
       page = await this.newPage()
@@ -109,13 +106,7 @@ export default class BrowserProxy {
 
       await this.goto(page, url, viewport, headers, waitUntil)
 
-      let options: PDFOptions = {
-        width: String(width),
-        height: String(height)
-      }
-  
-      if (format)
-        options = { format }
+      const options = format ? { format } : undefined
   
       return await page.pdf(options)
     } catch (e) {
@@ -123,7 +114,7 @@ export default class BrowserProxy {
         await (page as Page).close()
       
       if (retry < 3)
-        return this.pdf(headers, url, width, height, vpWidth, vpHeight, waitUntil, format, retry + 1)
+        return this.pdf(headers, url, vpWidth, vpHeight, waitUntil, format, retry + 1)
       else
         throw new Error(`3 Retries failed - stacktrace: \n\n${e.stack}`)
     } finally {

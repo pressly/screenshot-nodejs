@@ -71,19 +71,17 @@ app.get('/pdf', async (req: Request, res: Response): Promise<void> => {
     res.status(422)
       .send('need a url')
 
-  const { vpWidth, vpHeight, width, height, waitUntil, format } = getProperitiesFrom(req.query)
+  const { vpWidth, vpHeight, waitUntil, format } = getProperitiesFrom(req.query)
 
   const headers = transformHeaders(req.rawHeaders)
 
   try {
-    const pdfBuffer = await browser.pdf(headers, url, width, height, vpWidth, vpHeight, waitUntil, format)
+    const pdfBuffer = await browser.pdf(headers, url, vpWidth, vpHeight, waitUntil, format)
     res.set('Content-type', 'application/pdf').send(pdfBuffer)
   } catch(e) {
       res.status(500)
         .send(`Puppeteer Failed 
-          - url: ${url} 
-          - width: ${width} 
-          - height: ${height} 
+          - url: ${url}
           - vpWidth: ${vpWidth}
           - vpHeight: ${vpHeight}
           - format: ${format} 
