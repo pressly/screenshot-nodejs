@@ -18,6 +18,11 @@ Query Params
 - x: Int - defaults to 1 
 - y: Int - defaults to 1
 - crop: string composed of "{Int}x{Int}" - defaults to 800x600
+- waitUntil: one of the following strings 
+  - "load" - page loads
+  - "domcontentloaded" - dom loaded 
+  - "networkidle0" - network is idle with 0 requests for 500ms 
+  - "networkidle2" - network is idle with 2 requests for 500ms
 crop is picked from moving the x, y from top left of the window and the crop size defines the rectangle [(x, y), (x + cropx, y), (x + cropx, y + cropy), (x, y + cropy)]
 **Example** 
 ```
@@ -29,6 +34,11 @@ GET localhost:{port}/png?url=https://www.google.com&window=500x500&crop=75x80&x=
 Query Params
 - url: valid url (including https://) - required
 - window: string composed of "{Int}x{Int}" - defaults to 800x600
+- waitUntil: one of the following strings 
+  - "load" - page loads
+  - "domcontentloaded" - dom loaded 
+  - "networkidle0" - network is idle with 0 requests for 500ms 
+  - "networkidle2" - network is idle with 2 requests for 500ms
 - format: one of the following strings
   - Letter: 8.5in x 11in
   - Legal: 8.5in x 14in
