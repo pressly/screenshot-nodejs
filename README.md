@@ -10,7 +10,7 @@ sudo docker run -p 8787:3000 screenshot
 Set the number of browsers running in `Dockerfile` as an argument to server.js
 
 # REST API
-*/PNG* \
+**/PNG** \
 Query Params
 - url: valid url (including https://) - required
 - window: string composed of "{Int}x{Int}" - defaults to 800x600
@@ -30,7 +30,7 @@ GET localhost:{port}/png?url=https://www.google.com&window=500x500&crop=75x80&x=
 ```
 ![alt text](https://i.imgur.com/i1SSbLM.png)
 
-*/PDF* \
+**/PDF** \
 Query Params
 - url: valid url (including https://) - required
 - window: string composed of "{Int}x{Int}" - defaults to 800x600
