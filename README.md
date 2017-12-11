@@ -45,7 +45,7 @@ Query Params
 ```
 GET localhost:{port}/pdf?url=https://www.google.com&format=Letter
 ```
-
+result: https://www.docdroid.net/223cLO0/pdf.pdf
 # LICENSE
 
 Screenshot is licensed under the [MIT license](./LICENSE).
