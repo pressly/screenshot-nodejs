@@ -7,17 +7,14 @@ interface BrowserOptions {
 }
 
 export default class BrowserProxy {
-  readonly _browsers: Promise<Browser | void>[]
+  readonly _browsers: Promise<Browser>[]
   readonly numBrowsers: number
   readonly options: BrowserOptions
 
   constructor(options: BrowserOptions, numBrowsers: number) {
-    this._browsers = []
+    this._browsers = [...Array<Promise<Browser>>(numBrowsers)].map(_ => puppeteer.launch(options))
     this.options = options
     this.numBrowsers = numBrowsers
-
-    for (let i = 0; i < numBrowsers; i++)
-      this._browsers.push(puppeteer.launch(options).catch(console.log))
 
     this._startCleanUp()
   }
@@ -27,7 +24,7 @@ export default class BrowserProxy {
       const browsers = await Promise.all<Browser | void>(this._browsers)
       browsers.forEach(async (browser, i) => {
         if (!browser) 
-          this._browsers[i] = puppeteer.launch(this.options).catch(console.log)
+          this._browsers[i] = puppeteer.launch(this.options)
         
         const pages = await (browser as Browser).pages()
         const length = pages.length
@@ -52,7 +49,7 @@ export default class BrowserProxy {
     } 
   }
 
-  async goto(page: Page, url: string, viewport: Viewport, headers: Record<string, string>, waitUntil: string) {
+  async goto(page: Page, url: string, viewport: Viewport, headers: Record<string, string>, waitUntil: string): Promise<void> {
     if (!page)
       throw new Error('Couldn\'t create new page')
     
@@ -64,7 +61,7 @@ export default class BrowserProxy {
   async screenshot(headers: Record<string, string>, 
     url: string, 
     width: number, height: number, vpWidth: number, vpHeight: number, 
-    x: number, y: number, waitUntil: string, retry = 0): Promise<Buffer | void> {
+    x: number, y: number, waitUntil: LoadEvent, retry = 0): Promise<Buffer> {
       let page: Page | undefined = undefined  
       try {
         page = await this.newPage()
@@ -101,7 +98,7 @@ export default class BrowserProxy {
     url: string, 
     width: number, height: number, vpWidth: number, vpHeight: number, 
     waitUntil: LoadEvent,
-    format: PDFFormat | undefined, retry = 0): Promise<Buffer | void> {
+    format: PDFFormat | undefined, retry = 0): Promise<Buffer> {
     let page: Page | null = null
     try {
       page = await this.newPage()
@@ -136,18 +133,16 @@ export default class BrowserProxy {
   }
 
   async _getFreestBrowser(): Promise<{ browser: Browser, pages: Page[] }> {
-    const browsers = await Promise.all<Browser | void>(this._browsers)
+    const browsers = await Promise.all<Browser>(this._browsers)
     
     const freestBrowser: {
       browser: Browser, pages: Page[]
     } = await browsers.reduce(async (prevBrowser, browser) => {
       const prev = await prevBrowser
-      if (!browser)
-        return prev // this is just to fix type issues, should never happen
 
       const pages = await browser.pages()
 
-      
+      // if prev is the empty object
       if (Object.keys(prev).length === 0 || pages.length < prev.pages.length)
         return { pages, browser }
       else

@@ -12,8 +12,8 @@ if (!NUM_BROWSERS)
 
 const DEFAULT_VIEWPORT = [800, 600]
 const DEFAULT_CROP     = [800, 600]
-const DEFAULT_X        = 0
-const DEFAULT_Y        = 0
+const DEFAULT_X        = 1
+const DEFAULT_Y        = 1
 
 const browserOptions = {
   args: [
@@ -28,10 +28,10 @@ const app = express()
 const port = 3000
 
 const limiter = new RateLimit({
-  windowMs: 3 * 1000, // 3 seconds
+  windowMs: 2 * 1000, // 2 seconds
   max: NUM_BROWSERS, // limit to `NUM_BROWSER` requests per windowMs 
   delayAfter: NUM_BROWSERS,
-  delayMs: 200 // 
+  delayMs: 0 // disable delaying - full speed until the max limit is reached
 })
 
 app.use(limiter)
@@ -49,8 +49,6 @@ app.get('/png', async (req: Request, res: Response) => {
 
   try {
     const picture = await browser.screenshot(headers, url, width, height, vpWidth, vpHeight, x, y, waitUntil)
-    if (!picture)
-      throw new Error('picture not taken')
     res.set('Content-type', 'image/png').send(picture)
   } catch(e) {
       res.status(500)
@@ -66,7 +64,6 @@ app.get('/png', async (req: Request, res: Response) => {
   }
 })
 
-
 app.get('/pdf', async (req: Request, res: Response): Promise<void> => {
   const { url } = req.query
 
@@ -79,9 +76,7 @@ app.get('/pdf', async (req: Request, res: Response): Promise<void> => {
   const headers = transformHeaders(req.rawHeaders)
 
   try {
-    const pdfBuffer = await browser.pdf(headers, url, width, height, vpWidth, vpHeight, waitUntil as LoadEvent, format as PDFFormat)
-    if (!pdfBuffer)
-      throw new Error('pdf not taken')
+    const pdfBuffer = await browser.pdf(headers, url, width, height, vpWidth, vpHeight, waitUntil, format)
     res.set('Content-type', 'application/pdf').send(pdfBuffer)
   } catch(e) {
       res.status(500)
@@ -98,16 +93,17 @@ app.get('/pdf', async (req: Request, res: Response): Promise<void> => {
 
 app.listen(port, () => console.log(`server listening on port ${port}`))
 
-const waitUntilOptions: string[] = [
-  'networkidle2', 'networkidle0', 'domcontentloaded', 'load'
-]
-
-const pdfFormatOptions: string[] = [
-  'Letter', 'Legal', 'Tabload', 'Ledger', 'A0', 'A1', 'A2', 'A3', 'A4', 'A5'
-]
-
 const getProperitiesFrom = ({ window, crop, x, y, waitUntil, format } : Record<string, string | undefined>) => {
-  waitUntil = waitUntil && waitUntilOptions.includes(waitUntil) ? waitUntil : 'networkidle2'
+  const waitUntilOptions: LoadEvent[] = [
+    'networkidle2', 'networkidle0', 'domcontentloaded', 'load'
+  ]
+
+  const pdfFormatOptions: PDFFormat[] = [
+    'Letter', 'Legal', 'Tabload', 'Ledger', 'A0', 'A1', 'A2', 'A3', 'A4', 'A5'
+  ]
+
+  waitUntil = waitUntil && waitUntilOptions.includes(waitUntil as LoadEvent) ? waitUntil : 'networkidle2'
+  format = format && pdfFormatOptions.includes(format as PDFFormat) ? format : undefined
   
   let [vpWidth, vpHeight] = window ? window.split('x').map(n => parseInt(n, 10)) : DEFAULT_VIEWPORT
   
@@ -119,12 +115,16 @@ const getProperitiesFrom = ({ window, crop, x, y, waitUntil, format } : Record<s
   if (!width || !isFinite(width) || !height || !isFinite(height))
     [width, height] = DEFAULT_CROP
 
-  const numX = x ? parseInt(x as string, 10) : DEFAULT_X
-  const numY = y ? parseInt(y as string, 10) : DEFAULT_Y
+  const numX = x ? parseInt(x, 10) : DEFAULT_X
+  const numY = y ? parseInt(y, 10) : DEFAULT_Y
 
-  format = format && pdfFormatOptions.includes(format) ? format : undefined
-
-  return { x: numX, y: numY, vpWidth, vpHeight, width, height, waitUntil, format }
+  return { 
+    x: numX, 
+    y: numY,
+    vpWidth, vpHeight, 
+    width, height, 
+    waitUntil: waitUntil as LoadEvent, 
+    format: format as PDFFormat }
 }
 
 /**
