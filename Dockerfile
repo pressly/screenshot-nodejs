@@ -34,4 +34,4 @@ USER pptruser
 EXPOSE 9229
 EXPOSE 3000
 
-CMD ["node", "--inspect=0.0.0.0", "dist/server.js", "10"]
+CMD ["node", "dist/server.js", "10"]
