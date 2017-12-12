@@ -3,7 +3,7 @@ Node.js server with REST API built on top of [GoogleChrome/puppeteer](https://gi
 
 # Running screenshot in Docker
 ```
-cd screenshot/
+cd screenshot/server
 sudo docker build -t screenshot .
 sudo docker run -p 8787:3000 screenshot
 ```
