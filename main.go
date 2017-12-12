@@ -8,6 +8,10 @@ import (
 	screenshot "screenshot/lib"
 )
 
+/*
+ * Example client usage
+ */
+
 func main() {
 	client := screenshot.New("http://localhost:3000")
 	r, err := client.PNG("https://golang.org/pkg/fmt/", screenshot.Page{
