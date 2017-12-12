@@ -37,11 +37,11 @@ const limiter = new RateLimit({
 app.use(limiter)
 
 app.get('/png', async (req: Request, res: Response) => {
-  let { url } = req.query
-
-  if (!url)
+  if (!req.query.url)
     res.status(422)
       .send('need a url')
+
+  const url = decodeURIComponent(req.query.url)
   
   const { x, y, vpWidth, vpHeight, width, height, waitUntil } = getProperitiesFrom(req.query)
 
@@ -65,12 +65,12 @@ app.get('/png', async (req: Request, res: Response) => {
 })
 
 app.get('/pdf', async (req: Request, res: Response): Promise<void> => {
-  const { url } = req.query
-
-  if (!url)
+  if (!req.query.url)
     res.status(422)
       .send('need a url')
-
+      
+  const url = decodeURIComponent(req.query.url)
+      
   const { vpWidth, vpHeight, waitUntil, format } = getProperitiesFrom(req.query)
 
   const headers = transformHeaders(req.rawHeaders)
@@ -91,6 +91,8 @@ app.get('/pdf', async (req: Request, res: Response): Promise<void> => {
 
 app.listen(port, () => console.log(`server listening on port ${port}`))
 
+/* Helper Functions */
+
 const getProperitiesFrom = ({ window, crop, x, y, waitUntil, format } : Record<string, string | undefined>) => {
   const waitUntilOptions: LoadEvent[] = [
     'networkidle2', 'networkidle0', 'domcontentloaded', 'load'
@@ -100,8 +102,19 @@ const getProperitiesFrom = ({ window, crop, x, y, waitUntil, format } : Record<s
     'Letter', 'Legal', 'Tabload', 'Ledger', 'A0', 'A1', 'A2', 'A3', 'A4', 'A5'
   ]
 
-  waitUntil = waitUntil && waitUntilOptions.includes(waitUntil as LoadEvent) ? waitUntil : 'networkidle2'
-  format = format && pdfFormatOptions.includes(format as PDFFormat) ? format : undefined
+  if (window && !crop)
+    crop = window
+  
+  if (!crop)
+    [x, y] = ['0', '0']
+
+  waitUntil = waitUntil 
+    ? waitUntilOptions.find(opt => opt.toLowerCase() === (waitUntil as string).toLowerCase())
+    : 'networkidle2'
+
+  format = format 
+    ? pdfFormatOptions.find(opt => opt.toLowerCase() === (format as string).toLowerCase()) 
+    : undefined
   
   let [vpWidth, vpHeight] = window ? window.split('x').map(n => parseInt(n, 10)) : DEFAULT_VIEWPORT
   
@@ -122,7 +135,8 @@ const getProperitiesFrom = ({ window, crop, x, y, waitUntil, format } : Record<s
     vpWidth, vpHeight, 
     width, height, 
     waitUntil: waitUntil as LoadEvent, 
-    format: format as PDFFormat }
+    format: format as PDFFormat
+  }
 }
 
 /**

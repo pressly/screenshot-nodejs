@@ -10,6 +10,13 @@ sudo docker run -p 8787:3000 screenshot
 Set the number of browsers running in `Dockerfile` as an argument to server.js
 
 # REST API
+**Important**
+`url` query param needs to be url_encoded for all endpoints
+
+using https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent and https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/decodeURIComponent
+
+definitions of encoding and decoding
+
 **/PNG** \
 Query Params
 - url: valid url (including https://) - required

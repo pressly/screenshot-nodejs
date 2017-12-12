@@ -12,7 +12,8 @@ export default class BrowserProxy {
   readonly options: BrowserOptions
 
   constructor(options: BrowserOptions, numBrowsers: number) {
-    this._browsers = [...Array<Promise<Browser>>(numBrowsers)].map(_ => puppeteer.launch(options))
+    // closest to list comprehension we can get in javascript
+    this._browsers = [...Array(numBrowsers)].map(_ => puppeteer.launch(options))
     this.options = options
     this.numBrowsers = numBrowsers
 
@@ -94,7 +95,8 @@ export default class BrowserProxy {
       }
   }
 
-  async pdf(headers: Record<string, string>, url: string, vpWidth: number, vpHeight: number, 
+  async pdf(headers: Record<string, string>, 
+    url: string, vpWidth: number, vpHeight: number, 
     waitUntil: LoadEvent, format: PDFFormat | undefined, retry = 0): Promise<Buffer> {
     let page: Page | null = null
     try {
