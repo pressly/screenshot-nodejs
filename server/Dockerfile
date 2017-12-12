@@ -1,5 +1,8 @@
 # taken mostly from https://github.com/GoogleChrome/puppeteer/blob/master/docs/troubleshooting.md
 
+# https://github.com/GoogleChrome/puppeteer/issues/379 
+# when ^ gets resolved we'll go to alpine based image (node:8-alpine)
+# using node 8 instead of 9 because 8 is in LTS
 FROM node:8-slim
 
 WORKDIR /app
