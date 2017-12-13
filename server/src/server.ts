@@ -34,14 +34,14 @@ const browser = new Browser(browserOptions, NUM_BROWSERS)
 const app = express()
 const port = 3000
 
-// const limiter = new RateLimit({
-//   windowMs: 2 * 1000, // 2 seconds
-//   max: NUM_BROWSERS, // limit to `NUM_BROWSER` requests per windowMs 
-//   delayAfter: NUM_BROWSERS,
-//   delayMs: 0 // disable delaying - full speed until the max limit is reached
-// })
+const limiter = new RateLimit({
+  windowMs: 2 * 1000, // 2 seconds
+  max: NUM_BROWSERS, // limit to `NUM_BROWSER` requests per windowMs 
+  delayAfter: NUM_BROWSERS * 2,
+  delayMs: 0 // disable delaying - full speed until the max limit is reached
+})
 
-// app.use(limiter)
+app.use(limiter)
 
 app.get('/png', async (req: Request, res: Response) => {
   if (!req.query.url || !isValidUrl(req.query.url)) {
