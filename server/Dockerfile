@@ -2,7 +2,7 @@
 
 # https://github.com/GoogleChrome/puppeteer/issues/379 
 # when ^ gets resolved we'll go to alpine based image (node:8-alpine)
-# using node 8 instead of 9 because 8 is in LTS
+# using node 8 instead of 9 because 8 is in LTS (https://github.com/nodejs/Release)
 FROM node:8-slim
 
 WORKDIR /app
@@ -37,4 +37,4 @@ USER pptruser
 EXPOSE 9229
 EXPOSE 3000
 
-CMD ["node", "dist/server.js", "10"]
+CMD ["node", "dist/server.js", "20"]

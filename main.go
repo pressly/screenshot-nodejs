@@ -35,4 +35,11 @@ func main() {
 	pdf, _ := ioutil.ReadAll(p)
 
 	ioutil.WriteFile("./doc.pdf", pdf, 0644)
+
+	j, _ := client.JPEG("https://golang.org/pkg/fmt/", screenshot.Page{}, 100)
+
+	jpeg, _ := ioutil.ReadAll(j)
+
+	ioutil.WriteFile("./img.jpeg", jpeg, 0644)
+
 }

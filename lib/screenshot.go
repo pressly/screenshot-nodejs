@@ -116,7 +116,7 @@ func (c *Client) JPEG(websiteURL string, page Page, quality int) (io.Reader, err
 		return nil, err
 	}
 
-	u := fmt.Sprintf("%s/png?%s", c.BaseURL, queryParams)
+	u := fmt.Sprintf("%s/jpeg?%s", c.BaseURL, queryParams)
 
 	req, err := http.NewRequest("GET", u, nil)
 

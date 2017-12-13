@@ -6,6 +6,8 @@ interface BrowserOptions {
   args: string[]
 }
 
+export type ScreenshotType = 'PNG' | 'JPEG'
+
 export default class BrowserProxy {
   readonly _browsers: Promise<Browser>[]
   readonly numBrowsers: number
@@ -16,27 +18,6 @@ export default class BrowserProxy {
     this._browsers = [...Array(numBrowsers)].map(_ => puppeteer.launch(options))
     this.options = options
     this.numBrowsers = numBrowsers
-
-    this._startCleanUp()
-  }
-
-  async _startCleanUp() {
-    while (true) {
-      const browsers = await Promise.all<Browser | void>(this._browsers)
-      browsers.forEach(async (browser, i) => {
-        if (!browser) 
-          this._browsers[i] = puppeteer.launch(this.options)
-        
-        const pages = await (browser as Browser).pages()
-        const length = pages.length
-        if (length > 2)
-          pages.forEach((page, i) => {
-            if (i < length - 1) // don't close the last page (could be in use)
-              page.close()
-          })
-      })
-      await sleep(30 * 1000)
-    }
   }
 
   async newPage(): Promise<Page> {
@@ -45,6 +26,10 @@ export default class BrowserProxy {
     if (pages.length <= 1) {
       return browser.newPage()
     } else { // browser already rendering a page
+      if (pages.length > 2) { 
+        // this should never happen
+        throw new Error(`Too many pages open, possible memory leak - # of pages open:${pages.length}`)
+      }
       await sleep(50)
       return this.newPage()
     } 
@@ -60,33 +45,24 @@ export default class BrowserProxy {
   }
 
   async screenshot(headers: Record<string, string>, 
-    url: string, 
-    width: number, height: number, vpWidth: number, vpHeight: number, 
-    x: number, y: number, waitUntil: LoadEvent, retry = 0): Promise<Buffer> {
+    url: string, options: ScreenshotOptions, viewport: Viewport,
+    waitUntil: LoadEvent, retry = 0): Promise<Buffer> {
       let page: Page | undefined = undefined  
       try {
         page = await this.newPage()
 
-        const viewport = {
-          width: vpWidth, height: vpHeight
-        }
+        if (!options.clip)
+          options = { fullPage: true }
 
         await this.goto(page, url, viewport, headers, waitUntil)
 
-        let options: ScreenshotOptions = { fullPage: true }
-    
-        if (x && y && width && height)
-          options = {
-            clip: { x, y, width, height }
-          }
-        
         return await page.screenshot(options)   
       } catch (e) {
         if (page)
           await (page as Page).close()
         
         if (retry < 3)
-          return this.screenshot(headers, url, width, height, vpWidth, vpHeight, x, y, waitUntil, retry + 1)
+          return this.screenshot(headers, url, options, viewport, waitUntil, retry + 1)
         else
           throw new Error(`3 Retries failed - stacktrace: \n\n${e.stack}`)
       } finally {
@@ -95,20 +71,14 @@ export default class BrowserProxy {
       }
   }
 
-  async pdf(headers: Record<string, string>, 
-    url: string, vpWidth: number, vpHeight: number, 
-    waitUntil: LoadEvent, format: PDFFormat | undefined, retry = 0): Promise<Buffer> {
-    let page: Page | null = null
+  async pdf(headers: Record<string, string>, url: string, 
+    viewport: Viewport, options: Partial<PDFOptions>,
+    waitUntil: LoadEvent, retry = 0): Promise<Buffer> {
+    let page: Page | undefined = undefined
     try {
       page = await this.newPage()
 
-      const viewport = {
-        width: vpWidth, height: vpHeight
-      }
-
       await this.goto(page, url, viewport, headers, waitUntil)
-
-      const options = format ? { format } : undefined
   
       return await page.pdf(options)
     } catch (e) {
@@ -116,7 +86,7 @@ export default class BrowserProxy {
         await (page as Page).close()
       
       if (retry < 3)
-        return this.pdf(headers, url, vpWidth, vpHeight, waitUntil, format, retry + 1)
+        return this.pdf(headers, url, viewport, options, waitUntil, retry + 1)
       else
         throw new Error(`3 Retries failed - stacktrace: \n\n${e.stack}`)
     } finally {
@@ -128,9 +98,7 @@ export default class BrowserProxy {
   async _getFreestBrowser(): Promise<{ browser: Browser, pages: Page[] }> {
     const browsers = await Promise.all<Browser>(this._browsers)
     
-    const freestBrowser: {
-      browser: Browser, pages: Page[]
-    } = await browsers.reduce(async (prevBrowser, browser) => {
+    const freestBrowser = await browsers.reduce(async (prevBrowser, browser) => {
       const prev = await prevBrowser
 
       const pages = await browser.pages()
