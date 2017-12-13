@@ -1,17 +1,13 @@
-import { Browser, Page, ScreenshotOptions, Viewport, PDFOptions, LoadEvent, PDFFormat } from 'puppeteer'
+import { Browser, Page, ScreenshotOptions, Viewport, PDFOptions, LoadEvent, PDFFormat, LaunchOptions } from 'puppeteer'
 import * as puppeteer from 'puppeteer'
 import * as sleep from 'sleep-promise'
-
-interface BrowserOptions {
-  args: string[]
-}
 
 export default class BrowserProxy {
   readonly _browsers: Promise<Browser>[]
   readonly numBrowsers: number
-  readonly options: BrowserOptions
+  readonly options: LaunchOptions
 
-  constructor(options: BrowserOptions, numBrowsers: number) {
+  constructor(options: LaunchOptions, numBrowsers: number) {
     // closest to list comprehension we can get in javascript hacky but works
     this._browsers = [...Array(numBrowsers)].map(_ => puppeteer.launch(options))
     this.options = options
@@ -33,13 +29,13 @@ export default class BrowserProxy {
     } 
   }
 
-  async goto(page: Page, url: string, viewport: Viewport, headers: Record<string, string>, waitUntil: string): Promise<void> {
+  async goto(page: Page, url: string, viewport: Viewport, headers: Record<string, string>, waitUntil: LoadEvent): Promise<void> {
     if (!page)
       throw new Error('Couldn\'t create new page')
     
     await page.setViewport(viewport)
     await page.setExtraHTTPHeaders(headers)
-    await page.goto(url, { waitUntil: waitUntil as LoadEvent })
+    await page.goto(url, { waitUntil })
   }
 
   async screenshot(headers: Record<string, string>, url: string, options: ScreenshotOptions, viewport: Viewport, waitUntil: LoadEvent, retry = 0): Promise<Buffer> {

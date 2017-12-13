@@ -1,13 +1,18 @@
+import { URL } from 'url'
 import * as express from 'express'
 import { Request, Response } from 'express';
 import * as RateLimit from 'express-rate-limit'
 import * as puppeteer from 'puppeteer'
-import { Page, PageFnOptions, LoadEvent, PDFFormat, ScreenshotOptions, Viewport, PDFOptions } from 'puppeteer';
+import { LoadEvent, PDFFormat, ScreenshotOptions, Viewport, PDFOptions } from 'puppeteer';
 import Browser from './browser'
 
 const NUM_BROWSERS = parseInt(process.argv[2], 10)
 
-process.setMaxListeners(NUM_BROWSERS)
+/*
+ * IMPORTANT - each browser is listening to process's "exit" event
+ * this line allows more than the default 10 listeners / browsers open at a time
+ */
+ process.setMaxListeners(NUM_BROWSERS)
 
 if (!NUM_BROWSERS)
   throw new Error('Need to specify a non zero NUM_BROWSERS')
@@ -39,12 +44,14 @@ const port = 3000
 // app.use(limiter)
 
 app.get('/png', async (req: Request, res: Response) => {
-  if (!req.query.url)
+  if (!req.query.url || !isValidUrl(req.query.url)) {
     res.status(422)
-      .send('need a url')
+      .send('need a valid url')
+    return
+  }
 
   const url = decodeURIComponent(req.query.url)
-  
+
   const [ viewport, options, waitUntil ] = getProperitiesFromImg(req.query)
 
   options.type = 'png'
@@ -62,23 +69,25 @@ app.get('/png', async (req: Request, res: Response) => {
           - url: ${url} 
           - screenshot options: ${JSON.stringify(options)} 
           - viewport: ${JSON.stringify(viewport)} 
+          - waitUntil: ${waitUntil}
           - stacktrace: \n\n${e.stack}`)
   }
 })
 
 app.get('/jpeg', async (req: Request, res: Response): Promise<void> => {
-  if (!req.query.url)
+  if (!req.query.url || !isValidUrl(req.query.url)) {
     res.status(422)
       .send('need a url')
-    
+    return
+  }
   const url = decodeURIComponent(req.query.url)
-      
+
   const [ viewport, options, waitUntil ] = getProperitiesFromImg(req.query)
 
   options.type = 'jpeg'
 
   const headers = transformHeaders(req.rawHeaders)
-  
+
   try {
     const picture = await browser.screenshot(headers, url, options, viewport, waitUntil)
     res.status(200)
@@ -90,15 +99,17 @@ app.get('/jpeg', async (req: Request, res: Response): Promise<void> => {
       - url: ${url} 
       - screenshot options: ${JSON.stringify(options)} 
       - viewport: ${JSON.stringify(viewport)} 
+      - waitUntil: ${waitUntil}
       - stacktrace: \n\n${e.stack}`)
   }
 })
 
 app.get('/pdf', async (req: Request, res: Response): Promise<void> => {
-  if (!req.query.url)
+  if (!req.query.url || !isValidUrl(req.query.url)) {
     res.status(422)
       .send('need a url')
-      
+    return
+  } 
   const url = decodeURIComponent(req.query.url)
       
   const [ viewport, pdfOptions, waitUntil ] = getProperitiesFromPdf(req.query)
@@ -114,8 +125,9 @@ app.get('/pdf', async (req: Request, res: Response): Promise<void> => {
       res.status(500)
         .send(`Puppeteer Failed 
         - url: ${url} 
-        - screenshot options: ${JSON.stringify(pdfOptions)} 
+        - pdf options: ${JSON.stringify(pdfOptions)} 
         - viewport: ${JSON.stringify(viewport)} 
+        - waitUntil: ${waitUntil}
         - stacktrace: \n\n${e.stack}`)
   }
 })
@@ -232,6 +244,14 @@ const getProperitiesFromPdf = ({
   ]
 }
 
+const isValidUrl = (url: string): boolean => {
+  try {
+    new URL(url)
+    return true
+  } catch (e) {
+    return false
+  }
+}
 /**
  * pass through cookies, auth, etc. 
  * Using rawHeaders to ensure the values are strings
