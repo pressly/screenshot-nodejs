@@ -19,10 +19,11 @@ export default class BrowserProxy {
   }
 
   async newPage(): Promise<Page> {
+    console.log('newpage')
     const { browser, pages } = await this._getFreestBrowser()
     
     if (pages.length <= 1) {
-      return await browser.newPage()
+      return browser.newPage()
     } else { // browser already rendering a page
       console.log('here')
       if (pages.length > 2) { 
@@ -30,11 +31,12 @@ export default class BrowserProxy {
         throw new Error(`Too many pages open, possible memory leak - # of pages:${pages.length}`)
       }
       await sleep(50)
-      return await this.newPage()
+      return this.newPage()
     } 
   }
 
   async goto(page: Page, url: string, viewport: Viewport, headers: Record<string, string>, waitUntil: string): Promise<void> {
+    console.log('goto')
     if (!page)
       throw new Error('Couldn\'t create new page')
     
@@ -44,21 +46,22 @@ export default class BrowserProxy {
   }
 
   async screenshot(headers: Record<string, string>, url: string, options: ScreenshotOptions, viewport: Viewport, waitUntil: LoadEvent, retry = 0): Promise<Buffer> {
+    console.log('screenshot')
     let page: Page | undefined = undefined  
     try {
       page = await this.newPage()
-
+      console.log('got page')
       if (!options.clip)
         options = { fullPage: true }
 
       await this.goto(page, url, viewport, headers, waitUntil)
 
-      return await page.screenshot(options)   
+      return await page.screenshot(options)
     } catch (e) {
       if (page)
         await (page as Page).close()
       
-      if (retry < 3)
+      if (retry < 2)
         return this.screenshot(headers, url, options, viewport, waitUntil, retry + 1)
       else
         throw new Error(`3 Retries failed - stacktrace: \n\n${e.stack}`)
@@ -80,7 +83,7 @@ export default class BrowserProxy {
       if (page)
         await (page as Page).close()
       
-      if (retry < 3)
+      if (retry < 2)
         return this.pdf(headers, url, viewport, options, waitUntil, retry + 1)
       else
         throw new Error(`3 Retries failed - stacktrace: \n\n${e.stack}`)

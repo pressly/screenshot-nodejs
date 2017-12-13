@@ -159,8 +159,9 @@ const getProperitiesFromImg = ({
   const jpegQualityNum = jpegQuality ? parseInt(jpegQuality, 10) : undefined 
   return [
     {
-      width: vpWidth, height: vpHeight
-    },
+      width: vpWidth, 
+      height: vpHeight
+    } as Viewport,
     {
       clip: {
         width,
@@ -168,7 +169,7 @@ const getProperitiesFromImg = ({
         x: numX,
         y: numY
       }
-    },
+    } as ScreenshotOptions,
     waitUntil as LoadEvent
   ]
 }
@@ -216,7 +217,7 @@ const getProperitiesFromPdf = ({
     {
       width: vpWidth,
       height: vpHeight
-    },
+    } as Viewport,
     {
       format: pdfFormat,
       displayHeaderFooter: displayHeaderFooterBool,
@@ -226,7 +227,7 @@ const getProperitiesFromPdf = ({
       path, 
       pageRanges,
       scale: scaleNum
-    },
+    } as PDFOptions,
     waitUntil as LoadEvent
   ]
 }
