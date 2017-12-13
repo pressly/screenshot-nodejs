@@ -6,15 +6,13 @@ interface BrowserOptions {
   args: string[]
 }
 
-export type ScreenshotType = 'PNG' | 'JPEG'
-
 export default class BrowserProxy {
   readonly _browsers: Promise<Browser>[]
   readonly numBrowsers: number
   readonly options: BrowserOptions
 
   constructor(options: BrowserOptions, numBrowsers: number) {
-    // closest to list comprehension we can get in javascript
+    // closest to list comprehension we can get in javascript hacky but works
     this._browsers = [...Array(numBrowsers)].map(_ => puppeteer.launch(options))
     this.options = options
     this.numBrowsers = numBrowsers
@@ -24,14 +22,15 @@ export default class BrowserProxy {
     const { browser, pages } = await this._getFreestBrowser()
     
     if (pages.length <= 1) {
-      return browser.newPage()
+      return await browser.newPage()
     } else { // browser already rendering a page
+      console.log('here')
       if (pages.length > 2) { 
         // this should never happen
-        throw new Error(`Too many pages open, possible memory leak - # of pages open:${pages.length}`)
+        throw new Error(`Too many pages open, possible memory leak - # of pages:${pages.length}`)
       }
       await sleep(50)
-      return this.newPage()
+      return await this.newPage()
     } 
   }
 
@@ -44,36 +43,32 @@ export default class BrowserProxy {
     await page.goto(url, { waitUntil: waitUntil as LoadEvent })
   }
 
-  async screenshot(headers: Record<string, string>, 
-    url: string, options: ScreenshotOptions, viewport: Viewport,
-    waitUntil: LoadEvent, retry = 0): Promise<Buffer> {
-      let page: Page | undefined = undefined  
-      try {
-        page = await this.newPage()
+  async screenshot(headers: Record<string, string>, url: string, options: ScreenshotOptions, viewport: Viewport, waitUntil: LoadEvent, retry = 0): Promise<Buffer> {
+    let page: Page | undefined = undefined  
+    try {
+      page = await this.newPage()
 
-        if (!options.clip)
-          options = { fullPage: true }
+      if (!options.clip)
+        options = { fullPage: true }
 
-        await this.goto(page, url, viewport, headers, waitUntil)
+      await this.goto(page, url, viewport, headers, waitUntil)
 
-        return await page.screenshot(options)   
-      } catch (e) {
-        if (page)
-          await (page as Page).close()
-        
-        if (retry < 3)
-          return this.screenshot(headers, url, options, viewport, waitUntil, retry + 1)
-        else
-          throw new Error(`3 Retries failed - stacktrace: \n\n${e.stack}`)
-      } finally {
-        if (page)
-          await (page as Page).close()
-      }
+      return await page.screenshot(options)   
+    } catch (e) {
+      if (page)
+        await (page as Page).close()
+      
+      if (retry < 3)
+        return this.screenshot(headers, url, options, viewport, waitUntil, retry + 1)
+      else
+        throw new Error(`3 Retries failed - stacktrace: \n\n${e.stack}`)
+    } finally {
+      if (page)
+        await (page as Page).close()
+    }
   }
 
-  async pdf(headers: Record<string, string>, url: string, 
-    viewport: Viewport, options: Partial<PDFOptions>,
-    waitUntil: LoadEvent, retry = 0): Promise<Buffer> {
+  async pdf(headers: Record<string, string>, url: string, viewport: Viewport, options: Partial<PDFOptions>, waitUntil: LoadEvent, retry = 0): Promise<Buffer> {
     let page: Page | undefined = undefined
     try {
       page = await this.newPage()
@@ -100,14 +95,12 @@ export default class BrowserProxy {
     
     const freestBrowser = await browsers.reduce(async (prevBrowser, browser) => {
       const prev = await prevBrowser
-
       const pages = await browser.pages()
 
       // if prev is the empty object
-      if (Object.keys(prev).length === 0 || pages.length < prev.pages.length)
-        return { pages, browser }
-      else
-        return prev
+      return Object.keys(prev).length === 0 || pages.length < prev.pages.length
+        ? { pages, browser }
+        : prev
 
     }, Promise.resolve({}) as Promise<{ browser: Browser, pages: Page[] }>)
     return freestBrowser

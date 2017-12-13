@@ -4,7 +4,6 @@ import * as RateLimit from 'express-rate-limit'
 import * as puppeteer from 'puppeteer'
 import { Page, PageFnOptions, LoadEvent, PDFFormat, ScreenshotOptions, Viewport, PDFOptions } from 'puppeteer';
 import Browser from './browser'
-import { ScreenshotType } from './browser'
 
 const NUM_BROWSERS = parseInt(process.argv[2], 10)
 
@@ -61,8 +60,8 @@ app.get('/png', async (req: Request, res: Response) => {
       res.status(500)
         .send(`Puppeteer Failed 
           - url: ${url} 
-          - screenshot options: ${options} 
-          - viewport: ${viewport} 
+          - screenshot options: ${JSON.stringify(options)} 
+          - viewport: ${JSON.stringify(viewport)} 
           - stacktrace: \n\n${e.stack}`)
   }
 })
@@ -89,8 +88,8 @@ app.get('/jpeg', async (req: Request, res: Response): Promise<void> => {
     res.status(500)
     .send(`Puppeteer Failed 
       - url: ${url} 
-      - screenshot options: ${options} 
-      - viewport: ${viewport} 
+      - screenshot options: ${JSON.stringify(options)} 
+      - viewport: ${JSON.stringify(viewport)} 
       - stacktrace: \n\n${e.stack}`)
   }
 })
@@ -115,8 +114,8 @@ app.get('/pdf', async (req: Request, res: Response): Promise<void> => {
       res.status(500)
         .send(`Puppeteer Failed 
         - url: ${url} 
-        - screenshot options: ${pdfOptions} 
-        - viewport: ${viewport} 
+        - screenshot options: ${JSON.stringify(pdfOptions)} 
+        - viewport: ${JSON.stringify(viewport)} 
         - stacktrace: \n\n${e.stack}`)
   }
 })
