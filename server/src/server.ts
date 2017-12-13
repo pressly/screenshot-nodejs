@@ -144,9 +144,11 @@ const pdfFormatOptions: PDFFormat[] = [
   'Letter', 'Legal', 'Tabload', 'Ledger', 'A0', 'A1', 'A2', 'A3', 'A4', 'A5'
 ]
 
+type Query = Record<string, string | undefined>
+
 const getProperitiesFromImg = ({ 
   window, crop, x, y, waitUntil, jpegQuality 
-} : Record<string, string | undefined>): [Viewport, ScreenshotOptions, LoadEvent] => {
+} : Query): [Viewport, ScreenshotOptions, LoadEvent] => {
   if (window && !crop)
     crop = window
   if (!crop)
@@ -180,15 +182,17 @@ const getProperitiesFromImg = ({
         height,
         x: numX,
         y: numY
-      }
+      },
+      quality: jpegQualityNum
     } as ScreenshotOptions,
     waitUntil as LoadEvent
   ]
 }
 
 const getProperitiesFromPdf = ({ 
-  format, waitUntil, window, scale, margin, printBackground, landscape, displayHeaderFooter, path, pageRanges
-} : Record<string, string | undefined>): [Viewport, PDFOptions, LoadEvent] => {
+  format, waitUntil, window, scale, margin, printBackground, 
+  landscape, displayHeaderFooter, path, pageRanges
+} : Query): [Viewport, PDFOptions, LoadEvent] => {
   const pdfFormat = format 
     ? pdfFormatOptions.find(opt => opt.toLowerCase() === (format as string).toLowerCase()) 
     : undefined
