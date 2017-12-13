@@ -19,13 +19,11 @@ export default class BrowserProxy {
   }
 
   async newPage(): Promise<Page> {
-    console.log('newpage')
     const { browser, pages } = await this._getFreestBrowser()
     
     if (pages.length <= 1) {
       return browser.newPage()
     } else { // browser already rendering a page
-      console.log('here')
       if (pages.length > 2) { 
         // this should never happen
         throw new Error(`Too many pages open, possible memory leak - # of pages:${pages.length}`)
@@ -36,7 +34,6 @@ export default class BrowserProxy {
   }
 
   async goto(page: Page, url: string, viewport: Viewport, headers: Record<string, string>, waitUntil: string): Promise<void> {
-    console.log('goto')
     if (!page)
       throw new Error('Couldn\'t create new page')
     
@@ -46,11 +43,9 @@ export default class BrowserProxy {
   }
 
   async screenshot(headers: Record<string, string>, url: string, options: ScreenshotOptions, viewport: Viewport, waitUntil: LoadEvent, retry = 0): Promise<Buffer> {
-    console.log('screenshot')
     let page: Page | undefined = undefined  
     try {
       page = await this.newPage()
-      console.log('got page')
       if (!options.clip)
         options = { fullPage: true }
 
