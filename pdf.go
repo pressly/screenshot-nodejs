@@ -32,8 +32,8 @@ func makePdfQueryParams(websiteURL string, opts PdfOptions) (string, error) {
 
 	u := fmt.Sprintf("url=%s", parsedURL.String())
 
-	if opts.WindowWidth != 0 && opts.WindowHeight != 0 {
-		u += fmt.Sprintf("&window=%dx%d", opts.WindowWidth, opts.WindowHeight)
+	if opts.Window != nil {
+		u += fmt.Sprintf("&window=%dx%d", opts.Window.Width, opts.Window.Height)
 	}
 
 	if opts.WaitUntil != "" {
@@ -45,8 +45,10 @@ func makePdfQueryParams(websiteURL string, opts PdfOptions) (string, error) {
 		u += fmt.Sprintf("&format=%s", opts.Format)
 	}
 	u += fmt.Sprintf("&landscape=%t", opts.Landscape)
-	u += fmt.Sprintf("&margin=top:%s;right:%s;bottom:%s;left:%s",
-		opts.Margin.Top, opts.Margin.Right, opts.Margin.Bottom, opts.Margin.Left)
+	if opts.Margin != nil {
+		u += fmt.Sprintf("&margin=top:%s;right:%s;bottom:%s;left:%s",
+			opts.Margin.Top, opts.Margin.Right, opts.Margin.Bottom, opts.Margin.Left)
+	}
 	if opts.PageRanges != "" {
 		u += fmt.Sprintf("&pageRanges=%s", opts.PageRanges)
 	}
