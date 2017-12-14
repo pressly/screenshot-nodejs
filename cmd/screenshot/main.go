@@ -8,6 +8,7 @@ import (
 
 /*
  * Example client usage
+ * TODO: make more complex examples
  */
 
 func main() {
