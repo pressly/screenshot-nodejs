@@ -32,11 +32,8 @@ func makePdfQueryParams(websiteURL string, opts PdfOptions) (string, error) {
 
 	u := fmt.Sprintf("url=%s", parsedURL.String())
 
-	if opts.Window != nil {
-		if len(opts.Window) != 2 {
-			return "", errors.New("Window must be nil or of length 2")
-		}
-		u += fmt.Sprintf("&window=%dx%d", opts.Window[0], opts.Window[1])
+	if opts.WindowWidth != 0 && opts.WindowHeight != 0 {
+		u += fmt.Sprintf("&window=%dx%d", opts.WindowWidth, opts.WindowHeight)
 	}
 
 	if opts.WaitUntil != "" {

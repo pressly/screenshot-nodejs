@@ -13,28 +13,59 @@ import (
 
 func main() {
 	client := screenshot.New("http://localhost:3000")
-	window := new([2]int)
-	window[0] = 1000
-	window[1] = 1000
+	windowWidth, windowHeight := 1000, 1000
 
-	png, _ := client.PNG("https://golang.org/pkg/fmt/", screenshot.ScreenshotOptions{
-		Window: window,
+	png, err := client.PNG("https://golang.org/pkg/fmt/", screenshot.ScreenshotOptions{
+		WindowWidth:  windowWidth,
+		WindowHeight: windowHeight,
 	})
 
-	pngB, _ := ioutil.ReadAll(png)
+	defer png.Close()
+
+	if err != nil {
+		panic(err)
+	}
+
+	pngB, err := ioutil.ReadAll(png)
+
+	if err != nil {
+		panic(err)
+	}
 
 	ioutil.WriteFile("./img.png", pngB, 0644)
 
-	p, _ := client.PDF("https://golang.org/pkg/fmt/", screenshot.PdfOptions{})
+	pdf, err := client.PDF("https://golang.org/pkg/fmt/", screenshot.PdfOptions{
+		PrintBackground: true,
+	})
 
-	pdf, _ := ioutil.ReadAll(p)
+	defer pdf.Close()
 
-	ioutil.WriteFile("./doc.pdf", pdf, 0644)
+	if err != nil {
+		panic(err)
+	}
 
-	j, _ := client.JPEG("https://golang.org/pkg/fmt/", screenshot.ScreenshotOptions{}, 100)
+	pdfB, err := ioutil.ReadAll(pdf)
 
-	jpeg, _ := ioutil.ReadAll(j)
+	if err != nil {
+		panic(err)
+	}
 
-	ioutil.WriteFile("./img.jpeg", jpeg, 0644)
+	ioutil.WriteFile("./doc.pdf", pdfB, 0644)
+
+	jpeg, err := client.JPEG("https://golang.org/pkg/fmt/", screenshot.ScreenshotOptions{}, 100)
+
+	defer jpeg.Close()
+
+	if err != nil {
+		panic(err)
+	}
+
+	jpegB, err := ioutil.ReadAll(jpeg)
+
+	if err != nil {
+		panic(err)
+	}
+
+	ioutil.WriteFile("./img.jpeg", jpegB, 0644)
 
 }

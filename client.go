@@ -25,18 +25,21 @@ type PdfOptions struct {
 	PageRanges          string // example'1-5, 8, 11-13'
 	Format              string
 	Margin              Margin
-	Window              *[2]int
+	WindowWidth         int
+	WindowHeight        int
 	WaitUntil           string
 	Headers             map[string]string
 }
 
 type ScreenshotOptions struct {
-	Headers   map[string]string
-	Window    *[2]int // [x, y]
-	Crop      *[2]int // [x, y] not applicable for Pdf
-	WaitUntil string
-	X         *int // so it can be nil
-	Y         *int // ^
+	Headers      map[string]string
+	WindowWidth  int
+	WindowHeight int
+	CropWidth    int // [x, y] not applicable for Pdf
+	CropHeight   int
+	WaitUntil    string
+	X            *int // so it can be nil
+	Y            *int // ^
 }
 
 type Margin struct {
@@ -66,7 +69,7 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 	return resp, nil
 }
 
-func (c *Client) PNG(websiteURL string, opts ScreenshotOptions) (io.Reader, error) {
+func (c *Client) PNG(websiteURL string, opts ScreenshotOptions) (io.ReadCloser, error) {
 	req, err := makePngRequest(c.BaseURL, websiteURL, opts)
 
 	if err != nil {
@@ -92,7 +95,7 @@ func (c *Client) PNG(websiteURL string, opts ScreenshotOptions) (io.Reader, erro
 	return resp.Body, nil
 }
 
-func (c *Client) JPEG(websiteURL string, opts ScreenshotOptions, quality int) (io.Reader, error) {
+func (c *Client) JPEG(websiteURL string, opts ScreenshotOptions, quality int) (io.ReadCloser, error) {
 	req, err := makeJpegRequest(c.BaseURL, websiteURL, opts, quality)
 
 	if err != nil {
@@ -118,7 +121,7 @@ func (c *Client) JPEG(websiteURL string, opts ScreenshotOptions, quality int) (i
 	return resp.Body, nil
 }
 
-func (c *Client) PDF(websiteURL string, opts PdfOptions) (io.Reader, error) {
+func (c *Client) PDF(websiteURL string, opts PdfOptions) (io.ReadCloser, error) {
 	req, err := makePdfRequest(c.BaseURL, websiteURL, opts)
 
 	if err != nil {
