@@ -210,10 +210,8 @@ const getProperitiesFromPdf = ({
   const marginObj = margin 
     ? margin.split(';')
       .map(param => {
-        const keyValue = param.split(':')
-        if (keyValue.length !== 2) return undefined
-        const [key, value] = keyValue as ['top' | 'left' | 'right' | 'bottom', string]
-        return { [key]: value }
+        const [key, value] = param.split(':')
+        return key && value ? { [key]: value } : undefined
       }).filter(x => typeof x !== 'undefined')
     : undefined
 
@@ -265,9 +263,8 @@ const headersToIgnore = [
  * pass through cookies, auth, etc. 
  * Using rawHeaders to ensure the values are strings
  * `req.headers` could have array values 
- * Ex:
- * [ 'headerKey', 'headerValue', ... ] => { 'headerKey': 'headerValue', ... } 
- */
+ * Ex: [ 'headerKey', 'headerValue', ... ] => { 'headerKey': 'headerValue', ... } 
+ */ 
 const transformHeaders = (rawHeaders: string[]): Record<string, string> => 
   rawHeaders.reduce((prev, cur, i, array) =>
     i % 2 === 0 && !headersToIgnore.includes(cur)
