@@ -4,3 +4,4 @@ server/dist
 *.png
 *.jpeg
 *.pdf
+bin
