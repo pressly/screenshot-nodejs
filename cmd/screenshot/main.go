@@ -13,11 +13,13 @@ import (
 
 func main() {
 	client := screenshot.New("http://localhost:3000")
-	windowWidth, windowHeight := 1000, 1000
+	window := &screenshot.Window{
+		Width:  1000,
+		Height: 1000,
+	}
 
 	png, err := client.PNG("https://golang.org/pkg/fmt/", screenshot.ScreenshotOptions{
-		WindowWidth:  windowWidth,
-		WindowHeight: windowHeight,
+		Window: window,
 	})
 
 	defer png.Close()

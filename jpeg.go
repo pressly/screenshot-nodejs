@@ -32,20 +32,15 @@ func makeJpegQueryParams(websiteURL string, opts ScreenshotOptions, quality int)
 
 	u := fmt.Sprintf("url=%s", parsedURL.String())
 
-	if opts.CropWidth != 0 && opts.CropHeight != 0 {
-		u += fmt.Sprintf("&crop=%dx%d", opts.CropWidth, opts.CropHeight)
+	if opts.Crop != nil {
+		u += fmt.Sprintf("&crop=%dx%d&x=%d&y=%d", opts.Crop.Width, opts.Crop.Height, opts.Crop.X, opts.Crop.Y)
 	}
-	if opts.WindowWidth != 0 && opts.WindowHeight != 0 {
-		u += fmt.Sprintf("&window=%dx%d", opts.WindowWidth, opts.WindowWidth)
+	if opts.Window != nil {
+		u += fmt.Sprintf("&window=%dx%d", opts.Window.Width, opts.Window.Height)
 	}
 
 	if opts.WaitUntil != "" {
 		u += "&waituntil=" + opts.WaitUntil
 	}
-
-	if opts.X != nil && opts.Y != nil {
-		u += fmt.Sprintf("&x=%d&y=%d", *opts.X, *opts.Y)
-	}
-
 	return u, nil
 }

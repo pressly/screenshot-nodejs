@@ -24,22 +24,30 @@ type PdfOptions struct {
 	Landscape           bool
 	PageRanges          string // example'1-5, 8, 11-13'
 	Format              string
-	Margin              Margin
-	WindowWidth         int
-	WindowHeight        int
+	Margin              *Margin
+	Window              *Window
 	WaitUntil           string
 	Headers             map[string]string
 }
 
 type ScreenshotOptions struct {
-	Headers      map[string]string
-	WindowWidth  int
-	WindowHeight int
-	CropWidth    int // [x, y] not applicable for Pdf
-	CropHeight   int
-	WaitUntil    string
-	X            *int // so it can be nil
-	Y            *int // ^
+	Headers   map[string]string
+	Window    *Window
+	Crop      *Crop
+	WaitUntil string
+}
+
+type Window struct {
+	Width  int
+	Height int
+}
+
+//
+type Crop = struct {
+	Width  int
+	Height int
+	X      int
+	Y      int
 }
 
 type Margin struct {
