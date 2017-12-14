@@ -20,13 +20,13 @@ export default class BrowserProxy {
     if (pages.length <= 1) {
       return browser.newPage()
     } else { // browser already rendering a page
-      if (pages.length > 2) { 
+      if (pages.length > 2) {
         // this should never happen
         throw new Error(`Too many pages open, possible memory leak - # of pages:${pages.length}`)
       }
       await sleep(50)
       return this.newPage()
-    } 
+    }
   }
 
   async goto(page: Page, url: string, viewport: Viewport, headers: Record<string, string>, waitUntil: LoadEvent): Promise<void> {
