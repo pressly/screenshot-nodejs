@@ -32,17 +32,11 @@ func makePngQueryParams(websiteURL string, opts ScreenshotOptions) (string, erro
 
 	u := fmt.Sprintf("url=%s", parsedURL.String())
 
-	if opts.Crop != nil {
-		if len(opts.Crop) != 2 {
-			return "", errors.New("Crop must be nil or of length 2")
-		}
-		u += fmt.Sprintf("&crop=%dx%d", opts.Crop[0], opts.Crop[1])
+	if opts.CropWidth != 0 && opts.CropHeight != 0 {
+		u += fmt.Sprintf("&crop=%dx%d", opts.CropWidth, opts.CropHeight)
 	}
-	if opts.Window != nil {
-		if len(opts.Window) != 2 {
-			return "", errors.New("Window must be nil or of length 2")
-		}
-		u += fmt.Sprintf("&window=%dx%d", opts.Window[0], opts.Window[1])
+	if opts.WindowWidth != 0 && opts.WindowHeight != 0 {
+		u += fmt.Sprintf("&window=%dx%d", opts.WindowWidth, opts.WindowHeight)
 	}
 
 	if opts.WaitUntil != "" {
