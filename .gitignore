@@ -1,3 +1,6 @@
 server/node_modules
 .vscode
 server/dist
+*.png
+*.jpeg
+*.pdf
