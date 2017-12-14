@@ -30,7 +30,7 @@ type PdfOptions struct {
 	Headers             map[string]string
 }
 
-type ScreenshotOptions struct {
+type ImgOptions struct {
 	Headers   map[string]string
 	Window    *Window
 	Crop      *Crop
@@ -76,7 +76,7 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 	return resp, nil
 }
 
-func (c *Client) PNG(websiteURL string, opts ScreenshotOptions) (io.ReadCloser, error) {
+func (c *Client) PNG(websiteURL string, opts ImgOptions) (io.ReadCloser, error) {
 	req, err := makePngRequest(c.BaseURL, websiteURL, opts)
 
 	if err != nil {
@@ -102,7 +102,7 @@ func (c *Client) PNG(websiteURL string, opts ScreenshotOptions) (io.ReadCloser, 
 	return resp.Body, nil
 }
 
-func (c *Client) JPEG(websiteURL string, opts ScreenshotOptions, quality int) (io.ReadCloser, error) {
+func (c *Client) JPEG(websiteURL string, opts ImgOptions, quality int) (io.ReadCloser, error) {
 	req, err := makeJpegRequest(c.BaseURL, websiteURL, opts, quality)
 
 	if err != nil {

@@ -7,7 +7,7 @@ import (
 	"net/url"
 )
 
-func makePngRequest(baseURL string, websiteURL string, opts ScreenshotOptions) (*http.Request, error) {
+func makePngRequest(baseURL string, websiteURL string, opts ImgOptions) (*http.Request, error) {
 	queryParams, err := makePngQueryParams(websiteURL, opts)
 	if err != nil {
 		return nil, err
@@ -18,7 +18,7 @@ func makePngRequest(baseURL string, websiteURL string, opts ScreenshotOptions) (
 	return http.NewRequest("GET", u, nil)
 }
 
-func makePngQueryParams(websiteURL string, opts ScreenshotOptions) (string, error) {
+func makePngQueryParams(websiteURL string, opts ImgOptions) (string, error) {
 	parsedURL, err := url.Parse(websiteURL)
 	if err != nil {
 		return "", errors.New("Need to provide a valid websiteURL")

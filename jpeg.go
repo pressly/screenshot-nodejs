@@ -7,7 +7,7 @@ import (
 	"net/url"
 )
 
-func makeJpegRequest(baseURL string, websiteURL string, opts ScreenshotOptions, quality int) (*http.Request, error) {
+func makeJpegRequest(baseURL string, websiteURL string, opts ImgOptions, quality int) (*http.Request, error) {
 	queryParams, err := makeJpegQueryParams(websiteURL, opts, quality)
 	if err != nil {
 		return nil, err
@@ -18,7 +18,7 @@ func makeJpegRequest(baseURL string, websiteURL string, opts ScreenshotOptions, 
 	return http.NewRequest("GET", u, nil)
 }
 
-func makeJpegQueryParams(websiteURL string, opts ScreenshotOptions, quality int) (string, error) {
+func makeJpegQueryParams(websiteURL string, opts ImgOptions, quality int) (string, error) {
 	parsedURL, err := url.Parse(websiteURL)
 	if err != nil {
 		return "", errors.New("Need to provide a valid websiteURL")

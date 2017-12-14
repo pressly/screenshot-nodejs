@@ -18,7 +18,7 @@ func main() {
 		Height: 1000,
 	}
 
-	png, err := client.PNG("https://golang.org/pkg/fmt/", screenshot.ScreenshotOptions{
+	png, err := client.PNG("https://golang.org/pkg/fmt/", screenshot.ImgOptions{
 		Window: window,
 	})
 
@@ -54,7 +54,7 @@ func main() {
 
 	ioutil.WriteFile("./doc.pdf", pdfB, 0644)
 
-	jpeg, err := client.JPEG("https://golang.org/pkg/fmt/", screenshot.ScreenshotOptions{}, 100)
+	jpeg, err := client.JPEG("https://golang.org/pkg/fmt/", screenshot.ImgOptions{}, 100)
 
 	defer jpeg.Close()
 
