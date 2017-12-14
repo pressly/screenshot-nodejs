@@ -25,7 +25,10 @@ func makeJpegQueryParams(websiteURL string, opts ScreenshotOptions, quality int)
 	}
 
 	// check if query is escaped - shouldn't error out since coming from legit url
-	s, _ := url.QueryUnescape(parsedURL.RawQuery)
+	s, err := url.QueryUnescape(parsedURL.RawQuery)
+	if err != nil {
+		return "", err
+	}
 	if s == parsedURL.RawQuery {
 		parsedURL.RawQuery = url.QueryEscape(parsedURL.RawQuery)
 	}

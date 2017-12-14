@@ -42,7 +42,6 @@ type Window struct {
 	Height int
 }
 
-//
 type Crop = struct {
 	Width  int
 	Height int
