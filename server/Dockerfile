@@ -37,4 +37,5 @@ USER pptruser
 EXPOSE 9229
 EXPOSE 3000
 
+# start server with 20 browsers in the pool
 CMD ["node", "dist/server.js", "20"]
