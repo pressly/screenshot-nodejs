@@ -256,6 +256,11 @@ const isValidUrl = (url: string): boolean => {
     return false
   }
 }
+
+const headersToIgnore = [
+  'Host'
+]
+
 /**
  * pass through cookies, auth, etc. 
  * Using rawHeaders to ensure the values are strings
@@ -265,7 +270,7 @@ const isValidUrl = (url: string): boolean => {
  */
 const transformHeaders = (rawHeaders: string[]): Record<string, string> => 
   rawHeaders.reduce((prev, cur, i, array) =>
-    i % 2 === 0 
+    i % 2 === 0 && !headersToIgnore.includes(cur)
     ? {...prev,
         [cur]: array[i + 1]
       }
