@@ -24,7 +24,6 @@ RUN apt-get update && apt-get install -y wget --no-install-recommends \
 
 RUN npm install
 RUN npm run-script build
-RUN npm test
 
 # Add pptr user.
 RUN groupadd -r pptruser && useradd -r -g pptruser -G audio,video pptruser \

@@ -16,8 +16,6 @@ if (!NUM_BROWSERS)
  */
  process.setMaxListeners(NUM_BROWSERS)
 
-
-
 const browserOptions = {
   args: [
     '--no-sandbox',
@@ -25,7 +23,7 @@ const browserOptions = {
   ]
 }
 
-const browser = new Browser(browserOptions, NUM_BROWSERS)
+const browser = new Browser([...Array(NUM_BROWSERS)].map(_ => puppeteer.launch(browserOptions)))
 
 const app  = express()
 const port = 3000

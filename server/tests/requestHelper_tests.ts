@@ -1,3 +1,4 @@
+// requestHelper.ts
 import 'mocha'
 import { expect } from 'chai'
 import { getProperitiesFromImg, getProperitiesFromPdf, isValidUrl, transformHeaders,
@@ -19,7 +20,6 @@ describe('requestHelper', () => {
       const marginStr = 'top:40;right:70px;bottom:30%;left:50'
       const [ _, { margin }, __ ] = getProperitiesFromPdf({ margin: marginStr })
       expect(Object.keys(margin)).to.have.lengthOf(4)
-      console.log(margin)
       expect(margin.top).to.equal('40')
       expect(margin.right).to.equal('70px')
       expect(margin.bottom).to.equal('30%')

@@ -1,22 +1,15 @@
 import { Browser, Page, ScreenshotOptions, Viewport, PDFOptions, LoadEvent, PDFFormat, LaunchOptions } from 'puppeteer'
-import * as puppeteer from 'puppeteer'
 import * as sleep from 'sleep-promise'
 
 export default class BrowserProxy {
   readonly _browsers: Promise<Browser>[]
-  readonly numBrowsers: number
-  readonly options: LaunchOptions
 
-  constructor(options: LaunchOptions, numBrowsers: number) {
-    // closest to list comprehension we can get in javascript hacky but works
-    this._browsers = [...Array(numBrowsers)].map(_ => puppeteer.launch(options))
-    this.options = options
-    this.numBrowsers = numBrowsers
+  constructor(browsers: Promise<Browser>[]) {
+    this._browsers = browsers
   }
 
   async newPage(): Promise<Page> {
     const { browser, pages } = await this._getFreestBrowser()
-    
     if (pages.length <= 1) {
       return browser.newPage()
     } else { // browser already rendering a page
@@ -39,7 +32,7 @@ export default class BrowserProxy {
   }
 
   async screenshot(headers: Record<string, string>, url: string, options: ScreenshotOptions, viewport: Viewport, waitUntil: LoadEvent, retry = 0): Promise<Buffer> {
-    let page: Page | undefined = undefined  
+    let page: Page | undefined = undefined
     try {
       page = await this.newPage()
       if (!options.clip)
@@ -62,7 +55,7 @@ export default class BrowserProxy {
     }
   }
 
-  async pdf(headers: Record<string, string>, url: string, viewport: Viewport, options: Partial<PDFOptions>, waitUntil: LoadEvent, retry = 0): Promise<Buffer> {
+  async pdf(headers: Record<string, string>, url: string, viewport: Viewport, options: PDFOptions, waitUntil: LoadEvent, retry = 0): Promise<Buffer> {
     let page: Page | undefined = undefined
     try {
       page = await this.newPage()
