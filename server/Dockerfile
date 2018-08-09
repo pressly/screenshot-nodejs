@@ -3,7 +3,7 @@
 # https://github.com/GoogleChrome/puppeteer/issues/379 
 # when ^ gets resolved we'll go to alpine based image (node:8-alpine)
 # using node 8 instead of 9 because 8 is in LTS (https://github.com/nodejs/Release)
-FROM node:8-slim
+FROM node:10.6.0-slim
 
 WORKDIR /app
 
